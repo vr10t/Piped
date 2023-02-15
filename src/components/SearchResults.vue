@@ -9,7 +9,13 @@
     </select>
     <label for="chkShowWatched">
         <strong v-text="`${$t('actions.show_watched')}:`" />
-        <input type="checkbox" id="chkShowWatched" v-model="shouldShowWatched" />
+        <input
+            type="checkbox"
+            id="chkShowWatched"
+            v-model="shouldShowWatched"
+            value="shouldShowWatched"
+            @change="onChange"
+        />
     </label>
 
     <hr />
@@ -24,7 +30,7 @@
 
     <div v-if="results" class="video-grid">
         <template v-for="result in results.items" :key="result.url">
-            <ContentItem :item="result" height="94" width="168" shouldShowInSearch="this.shouldShowWatched" />
+            <ContentItem :item="result" height="94" width="168" :shouldShowInSearch="shouldShowWatched" />
         </template>
     </div>
 </template>
@@ -128,8 +134,9 @@ export default {
             if (searchHistory.length > 10) searchHistory.shift();
             localStorage.setItem("search_history", JSON.stringify(searchHistory));
         },
-        setShouldShowWatched() {
-            this.shouldShowWatched = !this.shouldShowWatched;
+        onChange(event) {
+            this.shouldShowWatched = event.target.checked;
+            console.log(this.shouldShowWatched);
         },
     },
 };
