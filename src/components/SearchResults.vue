@@ -7,6 +7,10 @@
     <select id="ddlSearchFilters" v-model="selectedFilter" default="all" class="select w-auto" @change="updateFilter()">
         <option v-for="filter in availableFilters" :key="filter" :value="filter" v-t="`search.${filter}`" />
     </select>
+    <label for="chkShowWatched">
+        <strong v-text="`${$t('actions.show_watched')}:`" />
+        <input type="checkbox" id="chkShowWatched" v-model="shouldShowWatched" />
+    </label>
 
     <hr />
 
@@ -20,7 +24,7 @@
 
     <div v-if="results" class="video-grid">
         <template v-for="result in results.items" :key="result.url">
-            <ContentItem :item="result" height="94" width="168" />
+            <ContentItem :item="result" height="94" width="168" shouldShowInSearch="this.shouldShowWatched" />
         </template>
     </div>
 </template>
@@ -46,6 +50,7 @@ export default {
                 "music_playlists",
             ],
             selectedFilter: this.$route.query.filter ?? "all",
+            shouldShowWatched: true,
         };
     },
     mounted() {
@@ -122,6 +127,9 @@ export default {
             searchHistory.unshift(query);
             if (searchHistory.length > 10) searchHistory.shift();
             localStorage.setItem("search_history", JSON.stringify(searchHistory));
+        },
+        setShouldShowWatched() {
+            this.shouldShowWatched = !this.shouldShowWatched;
         },
     },
 };

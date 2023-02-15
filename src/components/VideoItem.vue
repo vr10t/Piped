@@ -140,6 +140,7 @@ export default {
         index: { type: Number, default: -1 },
         playlistId: { type: String, default: null },
         admin: { type: Boolean, default: false },
+        shouldShowInSearch: { type: Boolean, default: true },
     },
     data() {
         return {
@@ -171,12 +172,16 @@ export default {
             }
         },
         shouldShowVideo() {
-            if (!this.isFeed || !this.getPreferenceBoolean("hideWatched", false)) return;
+            // if (!this.isFeed || !this.getPreferenceBoolean("hideWatched", false)) return;
 
             const objectStore = window.db.transaction("watch_history", "readonly").objectStore("watch_history");
             const request = objectStore.get(this.item.url.substr(-11));
             request.onsuccess = event => {
                 const video = event.target.result;
+                if (video && !this.shouldShowInSearch) {
+                    this.showVideo = false;
+                    return;
+                }
                 if (video && (video.currentTime ?? 0) > video.duration * 0.9) {
                     this.showVideo = false;
                     return;
