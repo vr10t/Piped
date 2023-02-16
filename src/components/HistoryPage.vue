@@ -6,6 +6,9 @@
             <button class="btn" v-t="'actions.clear_history'" @click="clearHistory" />
 
             <button class="btn mx-3" v-t="'actions.export_to_json'" @click="exportHistory" />
+
+            <!--redirect to history import page-->
+            <button class="btn" v-t="'actions.import_from_json'" @click="$router.push('/history/import')" />
         </div>
 
         <div class="right-1">
