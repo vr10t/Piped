@@ -11,7 +11,7 @@
             </div>
             <div>
                 <progress :value="index" :max="itemsLength" />
-                <div v-text="`Success: ${success} Error: ${error}`" />
+                <div v-text="`Success: ${success} Error: ${error} Skipped: ${skipped}`" />
             </div>
             <div>
                 <a class="btn w-auto" @click="handleImport">Import</a>
@@ -65,6 +65,7 @@ export default {
             index: 0,
             success: 0,
             error: 0,
+            skipped: 0,
         };
     },
     computed: {
@@ -78,7 +79,7 @@ export default {
             file.text().then(text => {
                 this.items = [];
                 // LibreTube
-                if (text.startsWith(`{"watchHistory":`)) {
+                if (text.includes("watchPositions")) {
                     const json = JSON.parse(text);
                     const items = json.watchHistory.map(video => {
                         return {
@@ -88,10 +89,11 @@ export default {
                             uploaderName: video.uploader,
                             uploaderUrl: video.uploaderUrl,
                             videoId: video.videoId,
+                            watchedAt: parseInt(video.watchedAt),
                             currentTime: json.watchPositions.find(i => i.videoId === video.videoId)?.position ?? 0,
                         };
                     });
-                    this.items = items;
+                    this.items = items.sort((a, b) => b.watchedAt - a.watchedAt);
                 }
                 // const json = JSON.parse(text);
                 // const items = json.watchHistory.map(video => {
@@ -161,24 +163,37 @@ export default {
                 var tx = window.db.transaction("watch_history", "readwrite");
                 var store = tx.objectStore("watch_history");
                 this.items.forEach(item => {
-                    try {
-                        const request = store.put(JSON.parse(JSON.stringify(item)));
-                        request.onsuccess = () => {
+                    console.log(item);
+                    // Don't override invidious items since they don't have all the data
+                    const dbItem = store.get(item.videoId);
+                    dbItem.onsuccess = () => {
+                        if (dbItem.result && dbItem.result.videoId === item.videoId) {
+                            console.log("Skipping", item.videoId);
                             this.index++;
-                            this.success++;
-                        };
-                        request.onerror = () => {
+                            this.skipped++;
+                            return;
+                        }
+                        try {
+                            const request = store.put(JSON.parse(JSON.stringify(item)));
+                            request.onsuccess = () => {
+                                console.log("success");
+                                this.index++;
+                                this.success++;
+                            };
+                            request.onerror = () => {
+                                this.index++;
+                                this.error++;
+                            };
+                        } catch (error) {
+                            console.error(error);
                             this.index++;
                             this.error++;
-                        };
-                    } catch (error) {
-                        console.error(error);
-                        this.index++;
-                        this.error++;
-                    }
+                        }
+                    };
                 });
             }
         },
     },
 };
+console.log("import");
 </script>
