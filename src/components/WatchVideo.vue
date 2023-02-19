@@ -147,11 +147,14 @@
             </span>
 
             <!-- eslint-disable-next-line vue/no-v-html -->
-            <div v-show="showDesc" class="break-words" v-html="purifyHTML(video.description)" />
-            <div
-                v-if="showDesc && sponsors && sponsors.segments"
-                v-text="`${$t('video.sponsor_segments')}: ${sponsors.segments.length}`"
-            />
+            <div v-show="true" class="break-words" v-html="description" />
+            <template v-if="showDesc">
+                <div
+                    v-if="sponsors && sponsors.segments"
+                    v-text="`${$t('video.sponsor_segments')}: ${sponsors.segments.length}`"
+                />
+                <div v-if="video.category" v-text="`${$t('video.category')}: ${video.category}`" />
+            </template>
         </div>
 
         <hr />
@@ -287,6 +290,11 @@ export default {
                 day: "numeric",
                 year: "numeric",
             });
+        },
+        description(_this) {
+            const desc = _this.purifyHTML(_this.video.description);
+            const shortDesc = desc.slice(0, 300);
+            return _this.showDesc ? desc : shortDesc + (desc.length > shortDesc.length ? "..." : "");
         },
     },
     mounted() {
